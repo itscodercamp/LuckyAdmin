@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+python-jose[cryptography]
+python-multipart
+qrcode[pil]
+pydantic-settings
+email-validator
+python-slugify
+gunicorn
+python-dotenv
+uvicorn[standard]
