@@ -108,6 +108,11 @@ def goodies_admin():
 @login_required
 def delete_goodie(reward_id):
     reward = Reward.query.get_or_404(reward_id)
+    
+    # Manually delete related redemption requests to avoid IntegrityError
+    # or NOT NULL constraint failure if cascading isn't set up perfectly for this case
+    RedemptionRequest.query.filter_by(reward_id=reward_id).delete()
+    
     db.session.delete(reward)
     db.session.commit()
     flash(f"Goodie '{reward.name}' removed.")
