@@ -1,49 +1,56 @@
-import argparse
-from app.database import SessionLocal, engine, Base
-from app.models import User
-from app.auth import get_password_hash
+from app import create_app
+from models import db, Admin, Product, Reward, User
+from werkzeug.security import generate_password_hash
 
-def manage_admin(phone, password, name, action):
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    
-    admin = db.query(User).filter(User.phone == phone).first()
-    
-    if action == "create":
-        if admin:
-            print(f"User with phone {phone} already exists. Use 'update' to change password.")
-        else:
-            admin_user = User(
-                name=name,
-                phone=phone,
-                city="HQ",
-                state="System",
-                email=f"admin_{phone}@luckylubricant.com",
-                hashed_password=get_password_hash(password),
-                is_admin=True,
-                is_active=True
+app = create_app()
+
+def seed():
+    with app.app_context():
+        # Create Admin
+        if not Admin.query.filter_by(username='admin').first():
+            admin = Admin(
+                username='admin',
+                password_hash=generate_password_hash('admin123')
             )
-            db.add(admin_user)
-            db.commit()
-            print(f"Admin user '{name}' created successfully with phone {phone}.")
-            
-    elif action == "update":
-        if not admin:
-            print(f"Admin with phone {phone} not found.")
-        else:
-            admin.hashed_password = get_password_hash(password)
-            admin.is_admin = True # Ensure it's admin
-            db.commit()
-            print(f"Password for admin {phone} updated successfully.")
-            
-    db.close()
+            db.session.add(admin)
+            print("Admin created: admin / admin123")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Manage Lucky Lubricant Admin Credentials")
-    parser.add_argument("--phone", required=True, help="Admin phone number")
-    parser.add_argument("--password", required=True, help="Admin password")
-    parser.add_argument("--name", default="Super Admin", help="Admin name (for create)")
-    parser.add_argument("--action", choices=["create", "update"], default="create", help="Action to perform")
-    
-    args = parser.parse_args()
-    manage_admin(args.phone, args.password, args.name, args.action)
+        # Create Sample Products
+        if Product.query.count() == 0:
+            products = [
+                Product(name="Fully Synthetic 5W-40", description="Premium engine oil for high performance", price=1200.0, category="Engine Oil"),
+                Product(name="Semi Synthetic 10W-30", description="Reliable protection for daily use", price=850.0, category="Engine Oil"),
+                Product(name="Diesel Engine Oil 15W-40", description="Heavy duty oil for trucks", price=2500.0, category="Lube"),
+            ]
+            db.session.bulk_save_objects(products)
+            print("Products seeded")
+
+        # Create Sample Rewards
+        if Reward.query.count() == 0:
+            rewards = [
+                Reward(name="Mobile Recharge ₹100", description="Redeem points for ₹100 recharge", points_required=500, stock=100),
+                Reward(name="Amazon Voucher ₹500", description="E-gift voucher for shopping", points_required=2000, stock=50),
+                Reward(name="Engine Flush Kit", description="Professional engine cleaning kit", points_required=1500, stock=20),
+            ]
+            db.session.bulk_save_objects(rewards)
+            print("Rewards seeded")
+
+        # Create Sample User
+        if not User.query.filter_by(phone='9876543210').first():
+            user = User(
+                name="Test User",
+                phone="9876543210",
+                email="test@example.com",
+                city="Mumbai",
+                state="Maharashtra",
+                password_hash=generate_password_hash('user123'),
+                points=1000
+            )
+            db.session.add(user)
+            print("Sample user created: 9876543210 / user123")
+
+        db.session.commit()
+        print("Seeding complete")
+
+if __name__ == '__main__':
+    seed()

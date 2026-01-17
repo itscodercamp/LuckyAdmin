@@ -1,0 +1,173 @@
+{% extends "layout.html" %}
+
+{% block title %}Customer Profile{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="display: flex; gap: 2rem; align-items: center;">
+        <div class="avatar" style="width: 80px; height: 80px; font-size: 2rem;">{{ user.name[0]|upper }}</div>
+        <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700;">{{ user.name }}</h2>
+                    <p style="color: var(--text-muted); margin-top: 0.25rem;">
+                        <i class="ph ph-phone"></i> {{ user.phone }} | <i class="ph ph-envelope"></i> {{ user.email or
+                        'N/A' }}
+                    </p>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">{{ user.points }} Points
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Current Balance</div>
+                </div>
+            </div>
+
+            <div
+                style="display: flex; gap: 1.5rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Location</div>
+                    <div style="font-weight: 500; font-size: 0.875rem;">{{ user.city }}, {{ user.state }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Member Since</div>
+                    <div style="font-weight: 500; font-size: 0.875rem;">{{ user.created_at.strftime('%B %d, %Y') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <!-- Tab Navigation -->
+    <div style="display: flex; gap: 2rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem;">
+        <button onclick="switchTab('tx')" id="tab-tx" class="tab-btn active">Wallet History</button>
+        <button onclick="switchTab('rd')" id="tab-rd" class="tab-btn">Redemptions</button>
+        <button onclick="switchTab('msg')" id="tab-msg" class="tab-btn">Messages</button>
+    </div>
+
+    <!-- History Content -->
+    <div id="content-tx" class="tab-content">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                    <tr>
+                        <td style="font-size: 0.8125rem; color: var(--text-muted);">{{ tx.created_at.strftime('%Y-%m-%d
+                            %H:%M') }}</td>
+                        <td>
+                            <span class="badge {{ 'badge-success' if tx.type == 'earn' else 'badge-danger' }}">
+                                {{ tx.type|upper }}
+                            </span>
+                        </td>
+                        <td style="font-weight: 700;">{{ '+' if tx.type == 'earn' else '-' }}{{ tx.amount }} pts</td>
+                        <td style="font-size: 0.875rem;">{{ tx.description }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">No
+                            transaction history.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Redemptions Content -->
+    <div id="content-rd" class="tab-content" style="display: none;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reward</th>
+                        <th>Points</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in redemptions %}
+                    <tr>
+                        <td style="font-size: 0.8125rem; color: var(--text-muted);">{{ r.created_at.strftime('%Y-%m-%d
+                            %H:%M') }}</td>
+                        <td style="font-weight: 500;">{{ r.reward.name }}</td>
+                        <td>{{ r.reward.points_required }} pts</td>
+                        <td>
+                            <span
+                                class="badge {{ 'badge-warning' if r.status == 'pending' else 'badge-success' if r.status == 'approved' else 'badge-danger' }}">
+                                {{ r.status|upper }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">No
+                            redemption requests.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Messages Content -->
+    <div id="content-msg" class="tab-content" style="display: none;">
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for m in messages %}
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 4px solid var(--primary);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <div style="font-weight: 600; font-size: 0.875rem;">{{ m.title }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ m.created_at.strftime('%Y-%m-%d
+                        %H:%M') }}</div>
+                </div>
+                <div style="font-size: 0.875rem; line-height: 1.5;">{{ m.message }}</div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">No messages found.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+        document.getElementById('content-' + tab).style.display = 'block';
+        document.getElementById('tab-' + tab).classList.add('active');
+    }
+</script>
+
+<style>
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 1rem 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+
+    .tab-btn:hover:not(.active) {
+        color: var(--text-main);
+    }
+</style>
+{% endblock %}

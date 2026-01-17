@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block title %}Reader: {{ message.subject }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('admin_routes.messages_admin') }}" class="btn btn-ghost"
+        style="border: 1px solid var(--border);">
+        <i class="ph ph-arrow-left"></i> Back to Messages
+    </a>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div style="border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">{{
+                    message.subject }}</h2>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="avatar" style="width: 32px; height: 32px; font-size: 0.75rem;">{{
+                        message.user.name[0]|upper }}</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9375rem;">{{ message.user.name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ message.user.phone }} | {{
+                            message.user.email or 'No Email' }}</div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right; font-size: 0.8125rem; color: var(--text-muted);">
+                <div>{{ message.created_at.strftime('%B %d, %Y') }}</div>
+                <div>{{ message.created_at.strftime('%I:%M %p') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div
+        style="background: #f8fafc; padding: 2rem; border-radius: 12px; line-height: 1.6; color: #334155; font-size: 1rem; min-height: 200px; white-space: pre-wrap;">
+        {{ message.message }}
+    </div>
+
+    <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <form action="{{ url_for('admin_routes.delete_message', msg_id=message.id) }}" method="POST">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Archive this message?')">
+                <i class="ph ph-trash"></i> Delete
+            </button>
+        </form>
+
+        <a href="tel:{{ message.user.phone }}" class="btn btn-primary">
+            <i class="ph ph-phone"></i> Call Customer
+        </a>
+    </div>
+</div>
+{% endblock %}

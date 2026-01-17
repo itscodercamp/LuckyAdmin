@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Lucky Lubricant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="login-page">
+    <div class="login-card">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div
+                style="width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 12px; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700;">
+                LL
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">Welcome
+                Back</h2>
+            <p style="color: var(--text-muted); font-size: 0.875rem;">Sign in to access the admin console</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div
+            style="background: #fee2e2; color: #ef4444; padding: 0.75rem; border-radius: 8px; font-size: 0.875rem; margin-bottom: 1.5rem; text-align: center;">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" placeholder="Enter your username" required autofocus>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="••••••••" required>
+            </div>
+            <div style="text-align: right; margin-bottom: 1.5rem;">
+                <a href="#"
+                    style="color: var(--primary); font-size: 0.8125rem; text-decoration: none; font-weight: 500;">Forgot
+                    password?</a>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.875rem;">Sign In</button>
+        </form>
+
+        <div style="margin-top: 2rem; text-align: center; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+            <p style="font-size: 0.8125rem; color: var(--text-muted);">
+                Protect your account with LL Security.
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

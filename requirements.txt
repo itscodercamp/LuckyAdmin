@@ -12,3 +12,5 @@ python-slugify
 gunicorn
 python-dotenv
 uvicorn[standard]
+pyzbar
+Pillow

@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+
+{% block title %}Batch Details: {{ batch.batch_name }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700;">{{ batch.batch_name }}</h2>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">Batch ID: #{{ batch.id }} | Generated on {{
+            batch.created_at.strftime('%B %d, %Y') }}</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <a href="{{ url_for('admin_routes.download_qr_zip', batch_id=batch.id) }}" class="btn btn-ghost"
+            style="border: 1px solid var(--border);">
+            <i class="ph ph-download-simple"></i> Download ZIP
+        </a>
+        <div id="del-cont-batch">
+            <button onclick="showBatchDelete()" class="btn btn-danger">
+                <i class="ph ph-trash"></i> Delete Batch
+            </button>
+        </div>
+        <div id="del-confirm-batch" style="display: none; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 0.75rem; color: var(--danger); font-weight: 600;">Confirm Delete?</span>
+            <form action="{{ url_for('admin_routes.delete_batch', batch_id=batch.id) }}" method="POST">
+                <button type="submit" class="btn btn-danger" style="background: #991b1b; color: white;">Yes,
+                    Delete</button>
+            </form>
+            <button onclick="hideBatchDelete()" class="btn btn-ghost">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="card stat-card">
+        <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;">
+            <i class="ph ph-hash"></i>
+        </div>
+        <div class="stat-details">
+            <h3>Total QRs</h3>
+            <div class="value">{{ batch.total_qrs }}</div>
+        </div>
+    </div>
+    <div class="card stat-card" style="border-left: 4px solid var(--warning);">
+        <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+            <i class="ph ph-hourglass"></i>
+        </div>
+        <div class="stat-details">
+            <h3>Pending</h3>
+            <div class="value">{{ pending }}</div>
+        </div>
+    </div>
+    <div class="card stat-card" style="border-left: 4px solid var(--success);">
+        <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
+            <i class="ph ph-check-square-offset"></i>
+        </div>
+        <div class="stat-details">
+            <h3>Redeemed</h3>
+            <div class="value">{{ redeemed }}</div>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-icon" style="background: #f1f5f9; color: var(--text-muted);">
+            <i class="ph ph-coins"></i>
+        </div>
+        <div class="stat-details">
+            <h3>Total Points</h3>
+            <div class="value">{{ batch.total_points }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Recent Scan Activity</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Points Earned</th>
+                    <th>UUID Reference</th>
+                    <th>Scanned At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for qr in recent_scans %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: var(--text-main);">User #{{ qr.redeemed_by }}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: var(--success);">+{{ qr.points }} pts</div>
+                    </td>
+                    <td style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">
+                        {{ qr.uuid }}
+                    </td>
+                    <td style="font-size: 0.8125rem;">
+                        {{ qr.redeemed_at.strftime('%Y-%m-%d %H:%M') }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                        No scans recorded yet for this batch.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function showBatchDelete() {
+        document.getElementById('del-cont-batch').style.display = 'none';
+        document.getElementById('del-confirm-batch').style.display = 'flex';
+    }
+    function hideBatchDelete() {
+        document.getElementById('del-cont-batch').style.display = 'block';
+        document.getElementById('del-confirm-batch').style.display = 'none';
+    }
+</script>
+{% endblock %}

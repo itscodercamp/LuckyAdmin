@@ -1,0 +1,209 @@
+{% extends "layout.html" %}
+
+{% block title %}Guddies & Rewards Management{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700;">Guddies Inventory</h2>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">Add products that customers can redeem with their
+            heart-earned points.</p>
+    </div>
+    <button onclick="openModal()" class="btn btn-primary">
+        <i class="ph ph-plus-circle"></i> Add New Guddie
+    </button>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Guddie Details</th>
+                    <th>Points Required</th>
+                    <th>Stock status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rewards %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="product-img-sm" style="background: #fdf2f8;">
+                                {% if r.image_url %}
+                                <img src="{{ r.image_url }}" alt="">
+                                {% else %}
+                                <i class="ph ph-gift" style="color: #db2777;"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-main);">{{ r.name }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ r.description|truncate(50)
+                                    }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 800; color: var(--primary);">{{ r.points_required }} pts</div>
+                    </td>
+                    <td>
+                        {% if r.stock > 10 %}
+                        <span class="badge badge-success">In Stock ({{ r.stock }})</span>
+                        {% elif r.stock > 0 %}
+                        <span class="badge badge-warning">Low Stock ({{ r.stock }})</span>
+                        {% else %}
+                        <span class="badge badge-danger">Out of Stock</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="showConfirm({{r.id}})" class="btn btn-danger btn-sm">
+                                <i class="ph ph-trash"></i>
+                            </button>
+                            <div id="del-confirm-{{r.id}}" style="display: none; align-items: center; gap: 0.4rem;">
+                                <form action="{{ url_for('admin_routes.delete_goodie', reward_id=r.id) }}"
+                                    method="POST">
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        style="background: var(--danger); color: white;">Confirm</button>
+                                </form>
+                                <button onclick="hideConfirm({{r.id}})" class="btn btn-ghost btn-sm">X</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                        No guddies listed yet. Click "Add New Guddie" to start.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ADD GUDDIE MODAL -->
+<div id="guddieModal" class="modal-overlay">
+    <div class="modal-card card">
+        <div class="modal-header">
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">Add New Guddie</h2>
+            <button onclick="closeModal()" class="close-btn"><i class="ph ph-x"></i></button>
+        </div>
+        <form method="POST" enctype="multipart/form-data" style="padding: 1.5rem;">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Guddie Name</label>
+                    <input type="text" name="name" placeholder="e.g. LL Branded T-Shirt" required>
+                </div>
+                <div class="form-group">
+                    <label>Points to Redeem</label>
+                    <input type="number" name="points_required" placeholder="e.g. 500" required>
+                </div>
+                <div class="form-group">
+                    <label>Initial Stock</label>
+                    <input type="number" name="stock" value="50" required>
+                </div>
+                <div class="form-group">
+                    <label>Guddie Photo</label>
+                    <div class="upload-box" onclick="document.getElementById('image_file').click()">
+                        <i class="ph ph-image" style="font-size: 2rem; color: var(--primary);"></i>
+                        <div style="margin-top: 0.5rem; font-weight: 600;">Upload Photo</div>
+                        <input type="file" id="image_file" name="image_file" accept="image/*" style="display: none;"
+                            onchange="handleFile(this)">
+                    </div>
+                    <div id="file-name" style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--primary);"></div>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 1rem;">
+                <label>Description</label>
+                <textarea name="description" rows="3" placeholder="Brief details about this reward..."></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="button" onclick="closeModal()" class="btn btn-ghost"
+                    style="flex: 1; border: 1px solid var(--border);">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 2;">Save Guddie</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-card {
+        width: 100%;
+        max-width: 500px;
+        padding: 0;
+        border: none;
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .upload-box {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .product-img-sm {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+    }
+
+    .product-img-sm img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .btn-sm {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-muted);
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    function openModal() { document.getElementById('guddieModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('guddieModal').style.display = 'none'; }
+    function handleFile(input) {
+        if (input.files[0]) document.getElementById('file-name').innerText = "Selected: " + input.files[0].name;
+    }
+    function showConfirm(id) { document.getElementById('del-confirm-' + id).style.display = 'flex'; }
+    function hideConfirm(id) { document.getElementById('del-confirm-' + id).style.display = 'none'; }
+</script>
+{% endblock %}

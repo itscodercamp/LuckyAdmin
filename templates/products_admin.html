@@ -1,0 +1,361 @@
+{% extends "layout.html" %}
+
+{% block title %}Product Catalog Management{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700;">Product Catalog</h2>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">Manage your lubricant inventory and frontend display.
+        </p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <!-- View Toggle -->
+        <div style="background: #f1f5f9; padding: 0.25rem; border-radius: 10px; display: flex; gap: 0.25rem;">
+            <button onclick="setView('table')" id="btn-table" class="view-btn active"><i
+                    class="ph ph-table"></i></button>
+            <button onclick="setView('grid')" id="btn-grid" class="view-btn"><i class="ph ph-squares-four"></i></button>
+        </div>
+        <!-- Modal Trigger -->
+        <button onclick="openModal()" class="btn btn-primary" style="box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);">
+            <i class="ph ph-plus-circle"></i> Add New Product
+        </button>
+    </div>
+</div>
+
+<!-- Results Area -->
+<div id="table-view" class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Details</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="product-img-sm">
+                                {% if product.image_url %}
+                                <img src="{{ product.image_url }}" alt="">
+                                {% else %}
+                                <i class="ph ph-package"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-main);">{{ product.name }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">ID: #{{ product.id }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge" style="background: #eff6ff; color: #1e40af;">{{ product.category }}</span>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700;">₹{{ "%.2f"|format(product.price) }}</div>
+                    </td>
+                    <td><span class="badge badge-success">Live</span></td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{{ url_for('admin_routes.product_details', product_id=product.id) }}"
+                                class="btn btn-ghost btn-sm">
+                                <i class="ph ph-eye"></i>
+                            </a>
+                            <button onclick="showConfirm({{product.id}})" class="btn btn-danger btn-sm"
+                                id="del-btn-{{product.id}}">
+                                <i class="ph ph-trash"></i>
+                            </button>
+                            <div id="del-confirm-{{product.id}}"
+                                style="display: none; align-items: center; gap: 0.4rem;">
+                                <form action="{{ url_for('admin_routes.delete_product', product_id=product.id) }}"
+                                    method="POST">
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        style="background: var(--danger); color: white;">Confirm</button>
+                                </form>
+                                <button onclick="hideConfirm({{product.id}})" class="btn btn-ghost btn-sm">X</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Grid/Card View (Hidden by default) -->
+<div id="grid-view" style="display: none;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+        {% for product in products %}
+        <div class="card product-card">
+            <div class="product-badge">{{ product.category }}</div>
+            <div class="product-card-img">
+                {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="">
+                {% else %}
+                <i class="ph ph-package" style="font-size: 3rem; color: var(--text-muted);"></i>
+                {% endif %}
+            </div>
+            <div style="padding: 1.25rem;">
+                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem;">{{ product.name }}</h3>
+                <div style="font-weight: 800; color: var(--primary); font-size: 1.25rem; margin-bottom: 1rem;">₹{{
+                    "%.2f"|format(product.price) }}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <a href="{{ url_for('admin_routes.product_details', product_id=product.id) }}" class="btn btn-ghost"
+                        style="flex: 1; border: 1px solid var(--border);">Details</a>
+                    <button class="btn btn-danger" style="margin-left: 0.5rem;" onclick="showConfirm({{product.id}})">
+                        <i class="ph ph-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ADD PRODUCT MODAL -->
+<div id="productModal" class="modal-overlay">
+    <div class="modal-card card">
+        <div class="modal-header">
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">Add New Product</h2>
+            <button onclick="closeModal()" class="close-btn"><i class="ph ph-x"></i></button>
+        </div>
+        <form method="POST" enctype="multipart/form-data" style="padding: 1.5rem;">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Full Product Name</label>
+                    <input type="text" name="name" placeholder="e.g. LL Premium Engine Oil" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+                        <select name="category" id="cat-select">
+                            <option value="Engine Oil">Engine Oil</option>
+                            <option value="Gear Oil">Gear Oil</option>
+                            <option value="Grease">Grease</option>
+                            <option value="Coolant">Coolant</option>
+                        </select>
+                        <input type="text" name="new_category" placeholder="...or type new category"
+                            style="margin-top: 0.5rem;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Marketing Price (₹)</label>
+                    <input type="number" step="0.01" name="price" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Upload Product Photo</label>
+                    <div class="upload-box" id="upload-box" onclick="document.getElementById('image_file').click()">
+                        <i class="ph ph-cloud-arrow-up" style="font-size: 2rem; color: var(--primary);"></i>
+                        <div style="margin-top: 0.5rem; font-weight: 600;">Click to upload</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">PNG, JPG (Max 5MB)</div>
+                        <input type="file" id="image_file" name="image_file" accept="image/*" style="display: none;"
+                            onchange="handleFileSelect(this)">
+                    </div>
+                    <div id="file-name"
+                        style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--primary); font-weight: 600;"></div>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 1rem;">
+                <label>Technical Description</label>
+                <textarea name="description" rows="3"
+                    placeholder="Describe performance, viscosity, and usage..."></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="button" onclick="closeModal()" class="btn btn-ghost"
+                    style="flex: 1; border: 1px solid var(--border);">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 2;">Confirm & Post Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .view-btn {
+        background: none;
+        border: none;
+        padding: 0.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: all 0.2s;
+    }
+
+    .view-btn.active {
+        background: white;
+        color: var(--primary);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .product-img-sm {
+        width: 40px;
+        height: 40px;
+        background: #f1f5f9;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .product-img-sm img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Product Cards */
+    .product-card {
+        padding: 0;
+        overflow: hidden;
+        position: relative;
+        transition: transform 0.3s;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .product-card-img {
+        height: 180px;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .product-card-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--primary);
+        z-index: 10;
+    }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-card {
+        width: 100%;
+        max-width: 600px;
+        padding: 0;
+        border: none;
+        animation: slideUp 0.3s ease-out;
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-muted);
+        cursor: pointer;
+    }
+
+    /* Custom Upload UI */
+    .upload-box {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .upload-box:hover {
+        border-color: var(--primary);
+        background: #f5f3ff;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .btn-sm {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.8rem;
+    }
+</style>
+
+<script>
+    function setView(view) {
+        document.getElementById('table-view').style.display = view === 'table' ? 'block' : 'none';
+        document.getElementById('grid-view').style.display = view === 'grid' ? 'block' : 'none';
+
+        document.getElementById('btn-table').classList.toggle('active', view === 'table');
+        document.getElementById('btn-grid').classList.toggle('active', view === 'grid');
+    }
+
+    function openModal() {
+        document.getElementById('productModal').style.display = 'flex';
+    }
+    function closeModal() {
+        document.getElementById('productModal').style.display = 'none';
+    }
+
+    function handleFileSelect(input) {
+        const fileName = input.files[0] ? input.files[0].name : '';
+        document.getElementById('file-name').innerText = "Selected: " + fileName;
+    }
+
+    function showConfirm(id) {
+        // Shared confirmation logic can go here or inline
+        document.getElementById('del-confirm-' + id).style.display = 'flex';
+    }
+    function hideConfirm(id) {
+        document.getElementById('del-confirm-' + id).style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function (event) {
+        const modal = document.getElementById('productModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+{% endblock %}
