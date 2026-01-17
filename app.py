@@ -66,7 +66,8 @@ def create_app():
 
     @app.route('/')
     def index():
-        return jsonify({"message": "Lucky Lubricant API is running", "admin_panel": "/admin/login"})
+        from flask import render_template
+        return render_template('landing.html')
 
     with app.app_context():
         db.create_all()

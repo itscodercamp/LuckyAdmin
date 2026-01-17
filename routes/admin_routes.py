@@ -104,13 +104,36 @@ def goodies_admin():
     rewards = Reward.query.all()
     return render_template('goodies_admin.html', rewards=rewards)
 
-@admin_bp.route('/goodie/<int:reward_id>/delete', methods=['POST'])
+@admin_bp.route('/goodies/<int:reward_id>/delete', methods=['POST'])
 @login_required
 def delete_goodie(reward_id):
     reward = Reward.query.get_or_404(reward_id)
     db.session.delete(reward)
     db.session.commit()
     flash(f"Goodie '{reward.name}' removed.")
+    return redirect(url_for('admin_routes.goodies_admin'))
+
+@admin_bp.route('/goodies/<int:reward_id>/edit', methods=['POST'])
+@login_required
+def edit_goodie(reward_id):
+    reward = Reward.query.get_or_404(reward_id)
+    
+    reward.name = request.form.get('name')
+    reward.description = request.form.get('description')
+    reward.points_required = int(request.form.get('points_required'))
+    reward.stock = int(request.form.get('stock'))
+    
+    if 'image_file' in request.files:
+        file = request.files['image_file']
+        if file and file.filename != '':
+            from werkzeug.utils import secure_filename
+            filename = secure_filename(f"reward_{int(datetime.now().timestamp())}_{file.filename}")
+            file_path = os.path.join('uploads', filename)
+            file.save(file_path)
+            reward.image_url = f"/uploads/{filename}"
+            
+    db.session.commit()
+    flash('Goodie updated successfully!')
     return redirect(url_for('admin_routes.goodies_admin'))
 
 @admin_bp.route('/products', methods=['GET', 'POST'])

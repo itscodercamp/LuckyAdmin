@@ -9,7 +9,7 @@
         <p style="color: var(--text-muted); font-size: 0.875rem;">Add products that customers can redeem with their
             heart-earned points.</p>
     </div>
-    <button onclick="openModal()" class="btn btn-primary">
+    <button onclick="openAddModal()" class="btn btn-primary">
         <i class="ph ph-plus-circle"></i> Add New Guddie
     </button>
 </div>
@@ -58,17 +58,15 @@
                     </td>
                     <td>
                         <div style="display: flex; gap: 0.5rem;">
-                            <button onclick="showConfirm({{r.id}})" class="btn btn-danger btn-sm">
+                            <button
+                                onclick='openEditModal({{r.id}}, {{r.name|tojson}}, {{r.points_required}}, {{r.stock}}, {{r.description|tojson}})'
+                                class="btn btn-ghost btn-sm"
+                                style="border: 1px solid var(--border); color: var(--primary);">
+                                <i class="ph ph-pencil-simple"></i>
+                            </button>
+                            <button onclick="confirmDelete('{{r.id}}', '{{r.name}}')" class="btn btn-danger btn-sm">
                                 <i class="ph ph-trash"></i>
                             </button>
-                            <div id="del-confirm-{{r.id}}" style="display: none; align-items: center; gap: 0.4rem;">
-                                <form action="{{ url_for('admin_routes.delete_goodie', reward_id=r.id) }}"
-                                    method="POST">
-                                    <button type="submit" class="btn btn-danger btn-sm"
-                                        style="background: var(--danger); color: white;">Confirm</button>
-                                </form>
-                                <button onclick="hideConfirm({{r.id}})" class="btn btn-ghost btn-sm">X</button>
-                            </div>
                         </div>
                     </td>
                 </tr>
@@ -88,10 +86,11 @@
 <div id="guddieModal" class="modal-overlay">
     <div class="modal-card card">
         <div class="modal-header">
-            <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">Add New Guddie</h2>
+            <h2 id="modalTitle" style="font-size: 1.25rem; font-weight: 700; margin: 0;">Add New Guddie</h2>
             <button onclick="closeModal()" class="close-btn"><i class="ph ph-x"></i></button>
         </div>
-        <form method="POST" enctype="multipart/form-data" style="padding: 1.5rem;">
+        <form id="goodieForm" action="{{ url_for('admin_routes.goodies_admin') }}" method="POST"
+            enctype="multipart/form-data" style="padding: 1.5rem;">
             <div class="form-grid">
                 <div class="form-group">
                     <label>Guddie Name</label>
@@ -198,12 +197,56 @@
 </style>
 
 <script>
-    function openModal() { document.getElementById('guddieModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('guddieModal').style.display = 'none'; }
+    const modal = document.getElementById('guddieModal');
+    const form = document.getElementById('goodieForm');
+    const title = document.getElementById('modalTitle');
+    const defaultAction = "{{ url_for('admin_routes.goodies_admin') }}";
+
+    function openAddModal() {
+        form.action = defaultAction;
+        title.innerText = "Add New Guddie";
+        form.reset();
+        document.getElementById('file-name').innerText = "";
+        modal.style.display = 'flex';
+    }
+
+    function openEditModal(id, name, points, stock, desc) {
+        form.action = "/admin/goodies/" + id + "/edit";
+        title.innerText = "Edit Guddie";
+
+        form.querySelector('[name="name"]').value = name;
+        form.querySelector('[name="points_required"]').value = points;
+        form.querySelector('[name="stock"]').value = stock;
+        form.querySelector('[name="description"]').value = desc || '';
+        document.getElementById('file-name').innerText = "Upload to change (optional)";
+
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() { modal.style.display = 'none'; }
+
     function handleFile(input) {
         if (input.files[0]) document.getElementById('file-name').innerText = "Selected: " + input.files[0].name;
     }
-    function showConfirm(id) { document.getElementById('del-confirm-' + id).style.display = 'flex'; }
-    function hideConfirm(id) { document.getElementById('del-confirm-' + id).style.display = 'none'; }
+
+    function confirmDelete(id, name) {
+        Swal.fire({
+            title: 'Delete ' + name + '?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/admin/goodies/${id}/delete`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        })
+    }
 </script>
 {% endblock %}
