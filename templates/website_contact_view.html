@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block title %}Website Inquiry Details{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div style="margin-bottom: 2rem;">
+        <a href="{{ url_for('admin_routes.website_contacts') }}" class="btn btn-ghost btn-sm"
+            style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; border: 1px solid var(--border);">
+            <i class="ph ph-arrow-left"></i>
+            Back to Inquiries
+        </a>
+    </div>
+
+    <div class="card">
+        <div
+            style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+            <div>
+                <h2 style="font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--text-main);">{{ contact.subject
+                    or 'No Subject' }}</h2>
+                <div
+                    style="margin-top: 0.5rem; display: flex; align-items: center; gap: 1rem; color: var(--text-muted); font-size: 0.875rem;">
+                    <span><i class="ph ph-calendar" style="vertical-align: middle;"></i> {{
+                        contact.created_at.strftime('%B %d, %Y at %H:%M') }}</span>
+                    {% if not contact.is_read %}
+                    <span class="badge badge-danger">New Inquiry</span>
+                    {% else %}
+                    <span class="badge badge-success" style="background: #f1f5f9; color: var(--text-muted);">Read</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <form action="{{ url_for('admin_routes.delete_website_contact', contact_id=contact.id) }}" method="POST">
+                <button type="submit" class="btn btn-danger btn-sm"
+                    onclick="return confirm('Are you sure you want to delete this inquiry?')">
+                    <i class="ph ph-trash"></i> Delete
+                </button>
+            </form>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div
+                style="background: var(--bg-main); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border);">
+                <div
+                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;">
+                    Sender Name</div>
+                <div style="font-weight: 600; color: var(--text-main); font-size: 1.125rem;">{{ contact.full_name }}
+                </div>
+            </div>
+            <div
+                style="background: var(--bg-main); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border);">
+                <div
+                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;">
+                    Contact Details</div>
+                <div style="font-weight: 600; color: var(--text-main);">{{ contact.email }}</div>
+                <div style="color: var(--text-muted); font-size: 0.875rem;">{{ contact.number }}</div>
+            </div>
+        </div>
+
+        <div style="background: #fdf2f8; padding: 2rem; border-radius: 12px; border: 1px dashed #f472b6;">
+            <div
+                style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #db2777; margin-bottom: 1rem; font-weight: 700;">
+                Message Content</div>
+            <div style="color: var(--text-main); line-height: 1.6; white-space: pre-wrap; font-size: 1.05rem;">{{
+                contact.message }}</div>
+        </div>
+
+        <div
+            style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 1rem;">
+            <a href="mailto:{{ contact.email }}?subject=Re: {{ contact.subject }}" class="btn btn-primary">
+                <i class="ph ph-paper-plane-tilt"></i> Reply via Email
+            </a>
+            <a href="tel:{{ contact.number }}" class="btn btn-ghost" style="border: 1px solid var(--border);">
+                <i class="ph ph-phone"></i> Call Sender
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

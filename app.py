@@ -55,9 +55,13 @@ def create_app():
 
     @app.context_processor
     def inject_notifications():
-        from models import Notification
+        from models import Notification, WebsiteContact
         count = Notification.query.filter_by(is_admin_alert=True, is_read=False).count()
-        return dict(unread_admin_notifications_count=count)
+        unread_website_contacts = WebsiteContact.query.filter_by(is_read=False).count()
+        return dict(
+            unread_admin_notifications_count=count,
+            unread_website_contacts_count=unread_website_contacts
+        )
 
     @app.route('/uploads/<filename>')
     def uploaded_file(filename):

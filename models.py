@@ -116,3 +116,14 @@ class SupportMessage(db.Model):
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user = db.relationship('User', backref='messages')
+
+class WebsiteContact(db.Model):
+    __tablename__ = 'website_contacts'
+    id = db.Column(db.Integer, primary_key=True)
+    full_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    number = db.Column(db.String(20), nullable=False)
+    subject = db.Column(db.String(100))
+    message = db.Column(db.Text)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

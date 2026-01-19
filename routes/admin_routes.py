@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
-from models import db, Admin, User, Product, Reward, QRBatch, QRCode, RedemptionRequest, Transaction, Notification, SupportMessage
+from models import db, Admin, User, Product, Reward, QRBatch, QRCode, RedemptionRequest, Transaction, Notification, SupportMessage, WebsiteContact
 import qrcode
 import os
 import uuid
@@ -41,6 +41,7 @@ def dashboard():
     pending_redemptions = RedemptionRequest.query.filter_by(status='pending').count()
     pending_orders = Order.query.filter_by(status='pending').count()
     unread_messages = SupportMessage.query.filter_by(is_read=False).count()
+    unread_website_contacts = WebsiteContact.query.filter_by(is_read=False).count()
     
     # New: Admin Notifications
     notifications = Notification.query.filter_by(is_admin_alert=True, is_read=False).order_by(Notification.created_at.desc()).all()
@@ -57,6 +58,7 @@ def dashboard():
                            pending_redemptions=pending_redemptions,
                            pending_orders=pending_orders,
                            unread_messages=unread_messages,
+                           unread_website_contacts=unread_website_contacts,
                            notifications=notifications,
                            recent_scans=recent_scans,
                            recent_redemptions=recent_redemptions)
@@ -407,3 +409,28 @@ def delete_message(msg_id):
     db.session.commit()
     flash('Message deleted.')
     return redirect(url_for('admin_routes.messages_admin'))
+
+@admin_bp.route('/website-contacts')
+@login_required
+def website_contacts():
+    contacts = WebsiteContact.query.order_by(WebsiteContact.created_at.desc()).all()
+    unread_count = WebsiteContact.query.filter_by(is_read=False).count()
+    return render_template('website_contacts.html', contacts=contacts, unread_count=unread_count)
+
+@admin_bp.route('/website-contact/<int:contact_id>')
+@login_required
+def view_website_contact(contact_id):
+    contact = WebsiteContact.query.get_or_404(contact_id)
+    if not contact.is_read:
+        contact.is_read = True
+        db.session.commit()
+    return render_template('website_contact_view.html', contact=contact)
+
+@admin_bp.route('/website-contact/<int:contact_id>/delete', methods=['POST'])
+@login_required
+def delete_website_contact(contact_id):
+    contact = WebsiteContact.query.get_or_404(contact_id)
+    db.session.delete(contact)
+    db.session.commit()
+    flash('Website contact request deleted.')
+    return redirect(url_for('admin_routes.website_contacts'))

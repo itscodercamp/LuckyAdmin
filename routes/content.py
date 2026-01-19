@@ -13,6 +13,39 @@ def contact_support():
     # Store support request logic here
     return jsonify({"message": "Support message sent"}), 200
 
+@content_bp.route('/website/contact', methods=['POST'])
+def website_contact():
+    data = request.json
+    full_name = data.get('full_name')
+    email = data.get('email')
+    number = data.get('number')
+    subject = data.get('subject')
+    message = data.get('message')
+    
+    if not all([full_name, email, number, message]):
+        return jsonify({"message": "Missing required fields"}), 400
+        
+    from models import WebsiteContact, Notification
+    new_contact = WebsiteContact(
+        full_name=full_name,
+        email=email,
+        number=number,
+        subject=subject,
+        message=message
+    )
+    db.session.add(new_contact)
+    
+    # Create admin notification
+    admin_notif = Notification(
+        title="New Website Contact",
+        message=f"Received a new contact form submission from {full_name}",
+        is_admin_alert=True
+    )
+    db.session.add(admin_notif)
+    
+    db.session.commit()
+    return jsonify({"message": "Contact request submitted successfully"}), 201
+
 @content_bp.route('/notifications', methods=['GET'])
 def notifications():
     user_id = request.args.get('user_id')

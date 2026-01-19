@@ -62,6 +62,14 @@
                     <i class="ph ph-chat-centered-dots nav-icon"></i>
                     <span class="nav-text">Support Messages</span>
                 </a>
+                <a href="{{ url_for('admin_routes.website_contacts') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'admin_routes.website_contacts' or request.endpoint == 'admin_routes.view_website_contact' }}">
+                    <i class="ph ph-envelope-simple nav-icon"></i>
+                    <span class="nav-text">Website Contact</span>
+                    {% if unread_website_contacts_count > 0 %}
+                    <span class="badge badge-danger" style="margin-left: auto; padding: 2px 6px; font-size: 0.7rem;">{{ unread_website_contacts_count }}</span>
+                    {% endif %}
+                </a>
                 <div style="margin-top: auto; padding-top: 2rem;">
                     <a href="{{ url_for('admin_routes.logout') }}" class="nav-item" style="color: #ef4444;">
                         <i class="ph ph-sign-out nav-icon"></i>
